@@ -7,6 +7,7 @@ const app = express();
 
 app.use(cors()); // Включаем CORS для всех запросов
 
+// Подключение к MongoDB
 mongoose.connect('mongodb://localhost:27017/qa_quiz', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -14,10 +15,13 @@ mongoose.connect('mongodb://localhost:27017/qa_quiz', {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('Could not connect to MongoDB', err));
 
-app.use(express.json()); // Для парсинга JSON-тел запросов
+// Для парсинга JSON-тел запросов
+app.use(express.json()); 
 
-app.use('/api/questions', quizRoutes); // Используем маршруты для '/api/questions'
+// Используем маршруты для '/api/questions'
+app.use('/api/questions', quizRoutes);
 
+// Определение порта, на котором будет запущен сервер
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

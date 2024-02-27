@@ -6,29 +6,24 @@
       <li v-for="(answer, index) in shuffledAnswers" 
           :key="index" 
           :class="{ correct: isAnswerSelected && answer === currentQuestion.correct_answer, wrong: isAnswerSelected && selectedAnswer === answer && selectedAnswer !== currentQuestion.correct_answer }"
-          @click="selectAnswer(answer)"
+          @click="isAnswerSelected ? null : selectAnswer(answer)"
           :disabled="isAnswerSelected">
         {{ answer }}
       </li>
     </ul>
     <p v-if="isAnswerSelected">{{ resultMessage }}</p>
-    <button v-if="isAnswerSelected && currentQuestionIndex < questions.length - 1" @click="nextQuestion">Следующий вопрос</button>
+    <button v-if="isAnswerSelected && currentQuestionIndex < totalQuestions - 1" @click="nextQuestion">Следующий вопрос</button>
   </div>
   <div v-else>
     <p>Загрузка вопросов...</p>
-    <!-- Можно добавить индикатор загрузки -->
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'AppQuiz',
-  props: {
-    questions: {
-      type: Array,
-      required: true
-    }
-  },
   data() {
     return {
       currentQuestion: null,
@@ -39,20 +34,33 @@ export default {
       selectedAnswer: '',
       isAnswerCorrect: false,
       isAnswerSelected: false,
+      questions: []
     };
   },
-  watch: {
-    questions: {
-      immediate: true,
-      handler(newQuestions) {
-        if (newQuestions && newQuestions.length > 0) {
-          this.currentQuestion = newQuestions[this.currentQuestionIndex];
-          this.shuffleAnswers(); // Перемешивание ответов
-        }
-      }
-    }
-  },
   methods: {
+    async fetchQuestions() {
+      try {
+        const response = await axios.get(`http://localhost:3000/api/questions`, {
+          params: { index: this.currentQuestionIndex }
+        });
+        if (response.data.length > 0) {
+          this.questions = response.data;
+          this.setQuestion();
+        } else {
+          console.error("No questions found for the current difficulty range.");
+        }
+      } catch (error) {
+        console.error("There was an error fetching the questions:", error);
+      }
+    },
+    setQuestion() {
+      if (this.questions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * this.questions.length);
+        this.currentQuestion = this.questions[randomIndex];
+        this.shuffleAnswers();
+        this.resetAnswer();
+      }
+    },
     shuffleAnswers() {
       if (this.currentQuestion && this.currentQuestion.answers) {
         this.shuffledAnswers = this.shuffleArray(this.currentQuestion.answers);
@@ -60,19 +68,13 @@ export default {
     },
     shuffleArray(array) {
       let currentIndex = array.length, randomIndex, temporaryValue;
-
-      // Пока остаются элементы для перемешивания...
       while (currentIndex !== 0) {
-        // Выбираем случайный оставшийся элемент...
         randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex--;
-
-        // И меняем его местами с текущим элементом.
         temporaryValue = array[currentIndex];
         array[currentIndex] = array[randomIndex];
         array[randomIndex] = temporaryValue;
       }
-
       return array;
     },
     selectAnswer(answer) {
@@ -81,12 +83,10 @@ export default {
       this.isAnswerSelected = true;
     },
     nextQuestion() {
-      if (this.currentQuestionIndex < this.questions.length - 1) {
+      if (this.currentQuestionIndex < this.totalQuestions - 1) {
         this.currentQuestionIndex++;
         this.currentQuestionNumber++;
-        this.currentQuestion = this.questions[this.currentQuestionIndex];
-        this.shuffleAnswers();
-        this.resetAnswer();
+        this.fetchQuestions();
       }
     },
     resetAnswer() {
@@ -95,10 +95,12 @@ export default {
       this.isAnswerCorrect = false;
     }
   },
-  // ... другие существующие опции
+  mounted() {
+    this.fetchQuestions();
+  }
 }
 </script>
 
 <style>
-  /* Существующие стили */
+  /* Ваши стили */
 </style>

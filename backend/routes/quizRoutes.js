@@ -1,30 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const Question = require('../models/question'); // Предполагается, что у вас есть файл модели Question
-
-// Получение всех вопросов
-router.get('/', async (req, res) => {
-  try {
-    const questions = await Question.find();
-    res.json(questions);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
+const Question = require('../models/question'); // Убедитесь, что модель определена правильно
 
 // Маршрут для получения вопросов с фильтрацией по сложности
-router.get('/filtered-questions', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    // Получение параметров из строки запроса
-    const { minDifficulty, maxDifficulty } = req.query;
+    const currentQuestionIndex = parseInt(req.query.index, 10) || 0;
 
-    // Поиск вопросов с использованием фильтра сложности
+    let difficultyRange;
+    if (currentQuestionIndex < 5) {
+      difficultyRange = { $gte: 1, $lte: 19 };
+    } else if (currentQuestionIndex < 13) {
+      difficultyRange = { $gte: 20, $lte: 49 };
+    } else if (currentQuestionIndex < 18) {
+      difficultyRange = { $gte: 50, $lte: 69 };
+    } else {
+      difficultyRange = { $gte: 70, $lte: 79 };
+    }
+
     const questions = await Question.find({
-      difficulty_score: {
-        $gte: parseInt(minDifficulty, 10), // $gte - greater than or equal
-        $lte: parseInt(maxDifficulty, 10)  // $lte - less than or equal
-      }
-    });
+      difficulty_score: difficultyRange
+    }).exec();
 
     res.json(questions);
   } catch (err) {
