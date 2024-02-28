@@ -1,18 +1,29 @@
 <template>
   <div class="quiz" v-if="currentQuestion">
+    <!-- Заголовок текущего вопроса -->
     <h2>Вопрос {{ currentQuestionNumber }} из {{ totalQuestions }}</h2>
     <h3>{{ currentQuestion.question }}</h3>
+
+    <!-- Список вариантов ответов -->
     <ul>
       <li v-for="(answer, index) in shuffledAnswers" 
           :key="index" 
-          :class="{ correct: isAnswerSelected && answer === currentQuestion.correct_answer, wrong: isAnswerSelected && selectedAnswer === answer && selectedAnswer !== currentQuestion.correct_answer }"
+          :class="{ 
+            correct: isAnswerSelected && answer === currentQuestion.correct_answer, 
+            wrong: isAnswerSelected && selectedAnswer === answer && selectedAnswer !== currentQuestion.correct_answer 
+          }"
           @click="isAnswerSelected ? null : selectAnswer(answer)"
           :disabled="isAnswerSelected">
         {{ answer }}
       </li>
     </ul>
+
+    <!-- Сообщение о результате выбора ответа -->
     <p v-if="isAnswerSelected">{{ resultMessage }}</p>
+
+    <!-- Кнопки для перехода к следующему вопросу или завершения теста -->
     <button v-if="isAnswerSelected && currentQuestionIndex < totalQuestions - 1" @click="nextQuestion">Следующий вопрос</button>
+    <button v-if="isAnswerSelected && currentQuestionIndex === totalQuestions - 1" @click="finishTest">Завершить тест</button>
   </div>
   <div v-else>
     <p>Загрузка вопросов...</p>
@@ -26,15 +37,15 @@ export default {
   name: 'AppQuiz',
   data() {
     return {
-      currentQuestion: null,
-      currentQuestionIndex: 0,
-      currentQuestionNumber: 1,
-      totalQuestions: 20,
-      shuffledAnswers: [],
-      selectedAnswer: '',
-      isAnswerCorrect: false,
-      isAnswerSelected: false,
-      questions: []
+      currentQuestion: null, // Текущий вопрос
+      currentQuestionIndex: 0, // Индекс текущего вопроса
+      currentQuestionNumber: 1, // Номер текущего вопроса
+      totalQuestions: 20, // Общее количество вопросов
+      shuffledAnswers: [], // Перемешанные ответы
+      selectedAnswer: '', // Выбранный ответ
+      isAnswerCorrect: false, // Правильность ответа
+      isAnswerSelected: false, // Флаг выбора ответа
+      questions: [] // Список вопросов
     };
   },
   methods: {
@@ -93,6 +104,9 @@ export default {
       this.isAnswerSelected = false;
       this.selectedAnswer = '';
       this.isAnswerCorrect = false;
+    },
+    finishTest() {
+      console.log("Тест завершен. Отобразить результаты.");
     }
   },
   mounted() {
@@ -102,5 +116,5 @@ export default {
 </script>
 
 <style>
-  /* Ваши стили */
+  /* Стили компонента */
 </style>
